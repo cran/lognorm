@@ -1,10 +1,12 @@
 \name{computeEffectiveAutoCorr}
 \alias{computeEffectiveAutoCorr}
 \title{computeEffectiveAutoCorr}
-\description{return the vector of effective components of the autocorrelation}
-\usage{computeEffectiveAutoCorr(res)}
+\description{Return the vector of effective components of the autocorrelation}
+\usage{computeEffectiveAutoCorr(res, type = "correlation")}
 \arguments{
   \item{res}{numeric of autocorrelated numbers, usually observation - model residuals}
+  \item{type}{
+}
 }
 \details{Returns all components before first negative autocorrelation}
 \value{numeric vector: strongest components of the autocorrelation function}

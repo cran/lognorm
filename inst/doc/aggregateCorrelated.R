@@ -1,3 +1,7 @@
+## ----eval=FALSE, include=FALSE-------------------------------------------
+#  # twDev::genVigs()
+#  rmarkdown::render("aggregateCorrelated.Rmd","md_document")
+
 ## ----setup, include=FALSE------------------------------------------------
 library(knitr)
 opts_chunk$set(out.extra = 'style="display:block; margin: auto"'
@@ -27,10 +31,10 @@ themeTw <- theme_bw(base_size = 10) +
   theme(axis.title = element_text(size = 9))
 
 ## ------------------------------------------------------------------------
-nObs <- 200; nRep <- 1000
+nObs <- 100; nRep <- 10000
 #nObs <- 1000; nRep <- 100
 xTrue <- rep(10, nObs)
-sigmaStar <- rep(1.5, nObs) # multiplicative stddev of 1.2
+sigmaStar <- rep(1.7, nObs) # multiplicative stddev of 1.2
 theta <- getParmsLognormForExpval(xTrue, sigmaStar)
 # generate observations with correlated errors
 acf1 <- c(0.4,0.1)
@@ -39,36 +43,44 @@ corrM <- setMatrixOffDiagonals(
 xObsN <- exp(mvtnorm::rmvnorm(
   nRep, mean = theta[,1]
   , sigma = diag(theta[,2]) %*% corrM %*% diag(theta[,2])))
-ds <- tibble(i = 1:nObs, xTrue, xObs = xObsN[1,], xErr =  xObs - xTrue)
-summary(rowSums(xObsN))
-#plot(density(rowSums(xObsN)))
 
 ## ---- echo=FALSE, fig.height=2.04, fig.width=3.27------------------------
-ggplot( slice(ds, 1:200), aes(i, xObs)) +
+ds <- tibble(i = 1:nObs, xTrue, xObs = xObsN[1,], xErr =  xObs - xTrue)
+summary(rowSums(xObsN))
+ggplot( ds, aes(i, xObs)) +
   geom_line() +
   geom_hline(yintercept = xTrue[1]) +
   themeTw +   
   theme(axis.title.x = element_blank())
 
 ## ------------------------------------------------------------------------
-  (effAcf <- computeEffectiveAutoCorr(ds$xErr))
-  (nEff <- computeEffectiveNumObs(ds$xErr))
+c(1, acf1)
 
 ## ------------------------------------------------------------------------
-coefSum <- estimateSumLognormal( theta[,1], theta[,2], effAcf = effAcf )
+(effAcf <- computeEffectiveAutoCorr(ds$xErr))
+(nEff <- computeEffectiveNumObs(ds$xErr))
+
+## ------------------------------------------------------------------------
+#coefSum <- estimateSumLognormal( theta[,1], theta[,2], effAcf = effAcf )
+coefSum <- estimateSumLognormal( theta[,1], theta[,2], effAcf = c(1,acf1) )
+exp(coefSum["sigma"])
+
+## ------------------------------------------------------------------------
 (sumExp <- getLognormMoments( coefSum[1], coefSum[2])[1,"mean"])
 
 ## ---- echo=FALSE, fig.height=2.04, fig.width=3.27------------------------
 dsPredSum <- data.frame(
-  p = seq(0, 1, length.out = 100)[-c(1,00)]
+  p = seq(0, 1, length.out = 100)[-c(1,0)] # percentiles
 ) %>%
   mutate( 
-    q = qlnorm(p, coefSum["mu"], coefSum["sigma"] )
-    ,density = dlnorm(q, coefSum["mu"], coefSum["sigma"]))
-
+    q = qlnorm(p, coefSum["mu"], coefSum["sigma"] )  # quantiles
+    ,density = dlnorm(q, coefSum["mu"], coefSum["sigma"])) # approximated density
+# density plot of the random draws
 ggplot(data.frame(y = rowSums(xObsN)), aes(y, color = "random draws")) + 
   geom_density() +
+  # line plot of the lognorm density approximation
   geom_line(data = dsPredSum, aes(q, density, color = "computed")) +
+  # expected value
   geom_vline(xintercept = sumExp) +
 themeTw +
 theme(legend.position = c(0.98,0.98), legend.justification = c(1,1)) +

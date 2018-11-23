@@ -1,3 +1,7 @@
+## ----eval=FALSE, include=FALSE-------------------------------------------
+#  # twDev::genVigs()
+#  rmarkdown::render("lognorm.Rmd","md_document")
+
 ## ----setup, include=FALSE------------------------------------------------
 library(knitr)
 opts_chunk$set(out.extra = 'style="display:block; margin: auto"'
