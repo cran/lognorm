@@ -56,3 +56,6 @@ themeTw +
 theme(legend.position = c(0.98,0.98), legend.justification = c(1,1)) +
 theme(axis.title.x = element_blank())
 
+## ----eval=FALSE, include=FALSE-------------------------------------------
+#  # complaint by CRAN: [md](aggregateCorrelated.md))
+

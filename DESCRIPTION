@@ -1,10 +1,10 @@
 Package: lognorm
 Title: Functions for the Lognormal Distribution
-Version: 0.1.5
+Version: 0.1.6
 Author: Thomas Wutzler
 Maintainer: Thomas Wutzler <twutz@bgc-jena.mpg.de>
 Description: The lognormal distribution  
-  (Limpert et al. (2001) <doi:10.1641/0006-3568(2001)051[0341:lndats]2.0.co;2>)
+  (Limpert et al. (2001) <doi:10.1641/0006-3568(2001)051%5B0341:lndats%5D2.0.co;2>)
   can characterize uncertainty that is bounded by zero.
   This package provides estimation of distribution parameters, computation of
   moments and other basic statistics, and an approximation of the distribution
@@ -18,6 +18,6 @@ LazyData: true
 RoxygenNote: 6.1.1
 URL: https://github.com/bgctw/lognorm
 NeedsCompilation: no
-Packaged: 2019-03-13 08:30:29 UTC; twutz
+Packaged: 2019-08-02 07:41:59 UTC; twutz
 Repository: CRAN
-Date/Publication: 2019-03-13 08:50:03 UTC
+Date/Publication: 2019-08-02 08:00:02 UTC
