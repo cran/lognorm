@@ -9,7 +9,7 @@ vignette: >
 ---
 ```{r eval=FALSE, include=FALSE}
 # twDev::genVigs()
-rmarkdown::render("lognormalSum.Rmd","md_document") 
+#rmarkdown::render("lognormalSum.Rmd","md_document") 
 ```
 
 ```{r setup, include=FALSE}
@@ -31,14 +31,45 @@ knit_hooks$set(spar = function(before, options, envir) {
 })
 library(lognorm) 
 if (!require(ggplot2) || !require(dplyr) || !require(tidyr) || !require(purrr)) {
-	print("To generate this vignette, ggplo2, dplyr, tidyr, and purrr are required.")
-	exit(0)
+	print("To generate this vignette, ggplot2, dplyr, tidyr, and purrr are required.")
+	knit_exit()
 }
-themeTw <- theme_bw(base_size = 10) + 
+themeTw <- ggplot2::theme_bw(base_size = 10) + 
   theme(axis.title = element_text(size = 9))
 ```
 
 # Approximating the sum of lognormal random variables
+
+Lo 2013 derived the following formula for the approximation of the sum of
+several correlated lognormal random variables by a lognormal distribution.
+$$
+\begin{aligned}
+S_+ &= \operatorname{E}\left[\sum_i X_i \right] = \sum_i 
+\operatorname{E}[X_i] = 
+\sum_i 
+e^{\mu_i + \sigma_i^2/2}		\\
+\sigma^2_{S} &= 1/S_+^2 \, \sum_{i,j}
+\operatorname{cor}_{ij} \sigma_i \sigma_j 	\operatorname{E}[X_i] 
+\operatorname{E}[X_j] 		\\ 
+ &= 1/S_+^2 \, \sum_{i,j}
+\operatorname{cor}_{ij} \sigma_i \sigma_j 	e^{\mu_i + \sigma_i^2/2} 
+e^{\mu_j + \sigma_j^2/2}  \\
+\mu_S &= \ln\left( S_+ \right) - \sigma_{S}^2/2 
+\end{aligned}
+$$
+where $S_+$ is the expected value of the sum, i.e the sum of the expected 
+values of the terms.
+$\mu_s$ and $\sigma_S$ are lognormal distribution
+parameters of the sum, $\mu_i$ and $\sigma_i$ are the lognormal
+distribution parameters of the added random variables, and 
+$\operatorname{cor}_{ij}$ is the
+correlation between two added random variables at log scale, 
+which for time is computed from estimated autocorrelation $\rho_k$.
+
+This method is implemented with function `estimateSumLognormal`, where 
+the full correlation matrix is specified. For computational efficiency,
+the correlation length can be specified and correlations further apart
+will not contribute to the sum.
 
 ## Two uncorrelated random variables
 ```{r}
@@ -52,7 +83,7 @@ sigma2 = 0.15
 
 A check by random numbers shows close correspondence.
 
-```{r, echo=FALSE, fig.height=2.04, fig.width=3.27}
+```{r densitySumTwo, echo=FALSE, fig.height=2.04, fig.width=3.27}
 nSample = 2000
 ds <- data.frame(
   x1 = rlnorm(nSample, mu1, sigma1)
@@ -74,9 +105,127 @@ theme(legend.position = c(0.98,0.98), legend.justification = c(1,1)) +
 theme(axis.title.x = element_blank())
 ```
 
-For a test on correlated variables see the 
-[aggregateCorrelated vignette](aggregateCorrelated.html).
-```{r eval=FALSE, include=FALSE}
-# complaint by CRAN: [md](aggregateCorrelated.md))
+## Many correlated variables 
+
+### Generating observations and log-normally distributed random errors
+
+We generate 10000 Observations of a sum of 100 random variables 
+with mean 10 and multiplicative standard deviation
+of 1.7.
+
+```{r}
+if (!requireNamespace("mvtnorm")) {
+  warning("Remainder of the vignette required mvtnorm installed.")
+  knitr::opts_chunk$set(error = TRUE) 
+}
+nObs <- 100; nRep <- 10000
+#nObs <- 1000; nRep <- 100
+xTrue <- rep(10, nObs)
+sigmaStar <- rep(1.7, nObs) # multiplicative stddev 
+theta <- getParmsLognormForExpval(xTrue, sigmaStar)
+# generate observations with correlated errors
+acf1 <- c(0.4,0.1)
+corrM <- setMatrixOffDiagonals(
+  diag(nrow = nObs), value = acf1, isSymmetric = TRUE)
+xObsN <- exp(mvtnorm::rmvnorm(
+  nRep, mean = theta[,1]
+  , sigma = diag(theta[,2]) %*% corrM %*% diag(theta[,2])))
 ```
+
+A single draw of the autocorrelated 100 variables looks like the following.
+```{r draw100, echo=FALSE, fig.height=2.04, fig.width=3.27}
+ds <- tibble(i = 1:nObs, xTrue, xObs = xObsN[1,], xErr =  xObs - xTrue)
+ggplot( ds, aes(i, xObs)) +
+  geom_line() +
+  geom_hline(yintercept = xTrue[1]) +
+  themeTw +   
+  theme(axis.title.x = element_blank())
+```
+
+### Estimating the correlation matrix and effective number of parameters
+
+We can estimate the autocorrelation matrix by assuming that it depends
+only on the distance in time, and estimate the autocorrelation matrix.
+
+The original autocorrelation function used to generate the sample was:
+```{r echo=FALSE}
+c(1, acf1)
+```
+
+The effective autocorrelation function estimated from the sample is:
+```{r}
+(effAcf <- computeEffectiveAutoCorr(ds$xErr))
+(nEff <- computeEffectiveNumObs(ds$xErr))
+```
+
+Due to autocorrelation, the effective number of parameters is less than 
+nObs = `r nObs`.
+
+### Computing the mean and its standard deviation
+
+First we compute the distribution parameter of the sum of the 100 variables.
+The multiplicative uncertainty has decreased from 1.7.
+
+```{r}
+#coefSum <- estimateSumLognormal( theta[,1], theta[,2], effAcf = effAcf )
+coefSum <- estimateSumLognormal( theta[,1], theta[,2], effAcf = c(1,acf1) )
+setNames(exp(coefSum["sigma"]), "sigmaStar")
+```
+
+Its expected value corresponds to the sum of expected values (100*10).
+
+```{r}
+(sumExp <- getLognormMoments( coefSum[1], coefSum[2])[1,"mean"])
+```
+
+The lognormal approximation of the distribution of the sum, is close to the
+distribution of the 10000 repetitions.
+
+```{r pdfSum100, echo=FALSE, fig.height=2.04, fig.width=3.27}
+dsPredSum <- data.frame(
+  p = seq(0, 1, length.out = 100)[-c(1,100)] # percentiles
+) %>%
+  mutate( 
+    q = qlnorm(p, coefSum["mu"], coefSum["sigma"] )  # quantiles
+    ,density = dlnorm(q, coefSum["mu"], coefSum["sigma"])) # approximated density
+# density plot of the random draws
+ggplot(data.frame(y = rowSums(xObsN)), aes(y, color = "random draws")) + 
+  geom_density() +
+  # line plot of the lognorm density approximation
+  geom_line(data = dsPredSum, aes(q, density, color = "computed sum")) +
+  # expected value
+  geom_vline(xintercept = sumExp) +
+themeTw +
+theme(legend.position = c(0.98,0.98), legend.justification = c(1,1)) +
+theme(axis.title.x = element_blank()) +
+theme(legend.title = element_blank())
+```
+
+The mean is the sum divided by the number of observations, $n$.
+While the multiplicative standard deviation does not change by this operation,
+the location parameter is obtained by dividing by $n$ at original scale, hence,
+subtracting $log(n)$ at log-scale.
+```{r}
+(coefMean <- setNames(c(coefSum["mu"] - log(nObs), coefSum["sigma"]), c("mu","sigma")))
+```
+
+And we can plot the estimated distribution of the mean.
+```{r pdfMean, echo=FALSE, fig.height=2.04, fig.width=3.27}
+dsPredMean <- data.frame(
+  p = seq(0, 1, length.out = 100)[-c(1,100)] # percentiles
+) %>%
+  mutate( 
+    q = qlnorm(p, coefMean["mu"], coefMean["sigma"] )  # quantiles
+    ,density = dlnorm(q, coefMean["mu"], coefMean["sigma"])) # approximated density
+ggplot(data = dsPredMean, aes(q, density, color = "mean")) +
+  geom_line() +
+  geom_vline(xintercept = getLognormMoments(
+    coefMean["mu"],coefMean["sigma"])[1,"mean"]) +
+themeTw +
+theme(legend.position = c(0.98,0.98), legend.justification = c(1,1)) +
+theme(axis.title.x = element_blank()) +
+theme(legend.title = element_blank())
+```
+
+
 

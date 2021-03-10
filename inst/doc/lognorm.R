@@ -1,8 +1,8 @@
-## ----eval=FALSE, include=FALSE-------------------------------------------
+## ----eval=FALSE, include=FALSE------------------------------------------------
 #  # twDev::genVigs()
-#  rmarkdown::render("lognorm.Rmd","md_document")
+#  #rmarkdown::render("lognorm.Rmd","md_document")
 
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 library(knitr)
 opts_chunk$set(out.extra = 'style="display:block; margin: auto"'
     #, fig.align = "center"
@@ -21,13 +21,13 @@ knit_hooks$set(spar = function(before, options, envir) {
 })
 library(lognorm) 
 if (!require(ggplot2) || !require(dplyr) || !require(purrr)) {
-	print("To generate this vignette, ggplo2, dplyr, and purrr are required.")
-	exit(0)
+	print("To generate this vignette, ggplot2, dplyr, and purrr are required.")
+	knit_exit()
 }
-themeTw <- theme_bw(base_size = 10) + 
+themeTw <- ggplot2::theme_bw(base_size = 10) + 
   theme(axis.title = element_text(size = 9))
 
-## ----lognormalDensities, echo=FALSE, fig.height=2.04, fig.width=3.27-----
+## ----lognormalDensities, echo=FALSE, fig.height=2.04, fig.width=3.27----------
 x <- seq(0,2.5,length.out = 200)
 mu <- log(1)
 sigmaStar0 <- c(1.2,1.5,2,5)
@@ -56,7 +56,7 @@ ans %>% ggplot(aes(x,density, linetype = sigmaStar, color = sigmaStar)) +
   theme(legend.position = c(0.98,0.98), legend.justification = c(1,1)) +
   theme(axis.title.x = element_blank())
 
-## ----lognormalCumDensities, echo=FALSE, fig.height=2.04, fig.width=3.27----
+## ----lognormalCumDensities, echo=FALSE, fig.height=2.04, fig.width=3.27-------
 ans %>% ggplot(aes(x,cumDensity, linetype = sigmaStar, color = sigmaStar)) + 
   geom_line(
     data = ansNormal, color = "blue", linetype = "dotted", show.legend = FALSE) +
@@ -67,16 +67,16 @@ ans %>% ggplot(aes(x,cumDensity, linetype = sigmaStar, color = sigmaStar)) +
   theme(legend.position = c(0.98,0.98), legend.justification = c(1,1)) +
   theme(axis.title.x = element_blank())
 
-## ----momentsLogitnorm----------------------------------------------------
+## ----momentsLogitnorm---------------------------------------------------------
 getLognormMode(mu = 0.6,sigma = 0.5)
 getLognormMedian(mu = 0.6,sigma = 0.5)
 (theta <- getLognormMoments(mu = 0.6,sigma = 0.5))
 
-## ----twCoefLogitnormMLE--------------------------------------------------
+## ----twCoefLogitnormMLE-------------------------------------------------------
 moments <- cbind(mean = c(1,1), var = c(0.2, 0.3)^2 )
 (theta <- getParmsLognormForMoments( moments[,1], moments[,2]))
 
-## ----plotFromMoments, echo=FALSE, fig.height=2.04, fig.width=3.27--------
+## ----plotFromMoments, echo=FALSE, fig.height=2.04, fig.width=3.27-------------
 ans <- map_df(1:nrow(moments), function(i){
   tibble(
     sd = sqrt(moments[i,2]), x = x

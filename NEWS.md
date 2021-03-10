@@ -1,3 +1,26 @@
+# lognorm 0.1.9
+- Less bias with missing values in computeEffectiveNumObs
+- New function varCor to compute unbiased variance of uncorrelated time series
+- seCor now based on varCor, which reduces bias for small number of effective
+  observations.
+
+# lognorm 0.1.8
+- Implement the Lo 2012 approximation of the distribution of the difference of
+  two lognormally distributed random variables by a shifted lognormal 
+  distribution.
+- Add Formulas to vignette of lognormalSum  
+- Add shift argument to moments, mode, and median to deal with shifted
+  lognormal distribution.
+- Implement sample-based Distribution function for the difference of two 
+  lognormal variables.
+
+# lognorm 0.1.7
+
+- rewrite documentation using roxygen2 instead of inlinedocs
+- getParmsLognormForLowerAndUpper: remove argument isTransScale and provide
+  new function getParmsLognormForLowerAndUpperLog instead
+- merge vignette aggregateCorrelated to vignette lognormalSum
+
 # lognorm 0.1.6
 fix for CRAN: reformat (html-escape) doi in DESCRIPTION
 

@@ -1,133 +1,94 @@
+#' Compute summary statistics of a log-normal distribution
+#'
+#' @describeIn getLognormMoments
+#' get the expected value, variance, and coefficient of variation
+#'
+#' @param mu numeric vector: location parameter
+#' @param sigma numeric vector: scale parameter
+#' @param m mean at original scale, may override default based on mu
+#' @param shift shift for the shifted lognormal distribution
+#'
+#' @return for \code{getLognormMoments} a numeric matrix with columns
+#' \code{mean} (expected value at original scale)
+#' , \code{var} (variance at original scale)
+#' , and \code{cv} (coefficient of variation: sqrt(var)/mean).
+#' For the other functions a numeric vector of the required summary.
+#' 
+#' @examples
+#'   # start by estimating lognormal parameters from moments
+#'   .mean <- 1
+#'   .var <- c(1.3,2)^2
+#'   parms <- getParmsLognormForMoments(.mean, .var)
+#'   #
+#'   # computed moments must equal previous ones
+#'   (ans <- getLognormMoments(parms[,"mu"], parms[,"sigma"]))
+#'   cbind(.var, ans[,"var"])
+#'   #
+#'   getLognormMedian(mu = log(1), sigma = log(2))
+#'   getLognormMode(mu = log(1), sigma = c(log(1.2),log(2)))
+#' 
+#' @references \code{Limpert E, Stahel W & Abbt M (2001)
+#' Log-normal Distributions across the Sciences: Keys and Clues.
+#' Oxford University Press (OUP) 51, 341,
+#' 10.1641/0006-3568(2001)051[0341:lndats]2.0.co;2}
+#' @seealso scaleLogToOrig
 #' @export
-getLognormMoments <- function(
-  ### get the expected value and variance of a log-normal distribution
-  mu        ##<< numeric vector of center parameter (mean at log scale, log(median))
-  , sigma   ##<< numeric vector of scale parameter (standard deviation at log scale)
-){
-  ##references<< \code{Limpert E, Stahel W & Abbt M (2001)
-  ## Log-normal Distributions across the Sciences: Keys and Clues.
-  ## Oxford University Press (OUP) 51, 341,
-  ## 10.1641/0006-3568(2001)051[0341:lndats]2.0.co;2}
+getLognormMoments <- function(mu,sigma, m = exp(mu + sigma2/2) - shift, shift = 0){
   sigma2 <- sigma*sigma
-  m = exp(mu + sigma2/2)
-  v = (exp(sigma2) - 1)*exp(2*mu + sigma2)
-  ##value<< numeric matrix with columns
+  v = (exp(sigma2) - 1)*(m + shift)^2
   cbind(
     mean = as.vector(m)              ##<< expected value at original scale
     , var = as.vector(v)             ##<< variance at original scale
     , cv = as.vector(sqrt(v)/m)      ##<< coefficient of variation: std/mean
   )
 }
-attr(getLognormMoments,"ex") <- function(){
-  # start by estimating lognormal parameters from moments
-  .mean <- 1
-  .var <- c(1.3,2)^2
-  parms <- getParmsLognormForMoments(.mean, .var)
-  #
-  # computed moments must equal previous ones
-  (ans <- getLognormMoments(parms[,"mu"], parms[,"sigma"]))
-  cbind(.var, ans[,"var"])
-}
 
+
+#' @describeIn getLognormMoments
+#' get the median
 #' @export
-getLognormMedian <- function(
-  ### get the median of a log-normal distribution
-  mu        ##<< center parameter (mean at log scale, log(median))
-  , sigma = NA ##<< dummy not used, but signature as with Mode and moments
-){
-  ##value<< the median
-  exp(mu)
-}
-attr(getLognormMedian,"ex") <- function(){
-  getLognormMedian(mu = log(1), sigma = log(2))
-}
+getLognormMedian <- function(mu, sigma, shift = 0) exp(mu) - shift
 
+#' @describeIn getLognormMoments
+#' get the mode
 #' @export
-getLognormMode <- function(
-  ### get the mode of a log-normal distribution
-  mu        ##<< center parameter (mean at log scale, log(median))
-  , sigma   ##<< scale parameter (standard deviation at log scale)
-){
-  ##value<< the mode
-  exp(mu - sigma*sigma)
-}
-attr(getLognormMode,"ex") <- function(){
-  # with larger sigma, the distribution is more skewed
-  # with mode further away from median = 1
-  getLognormMode(mu = log(1), sigma = c(log(1.2),log(2)))
-}
+getLognormMode <- function(mu, sigma, shift = 0) exp(mu - sigma*sigma) - shift
 
+#' Scale standard deviation between log and original scale.
+#'
+#' When comparing values at log scale that have different sd at original scale, 
+#' better compare log(mean) instead of mu.
+#' 
+#' @describeIn scaleLogToOrig get logmean and sigma at log scale
+#' @param logmean log of the expected value
+#' @param sigma standard deviation at log scale
+#'
+#' @return numeric matrix with columns \code{mean}, and \code{sd} at original scale
+#' @examples
+#'   xLog <- data.frame(logmean = c(0.8, 0.8), sigma = c(0.2, 0.3))
+#'   xOrig <- as.data.frame(scaleLogToOrig(xLog$logmean, xLog$sigma))
+#'   xLog2 <- as.data.frame(scaleOrigToLog(xOrig$mean, xOrig$sd))
+#'   all.equal(xLog, xLog2)
+#'   xLog3 <- as.data.frame(getParmsLognormForMoments(xOrig$mean, xOrig$sd^2))
+#'   all.equal(xLog$sigma, xLog3$sigma) # but mu  < logmean 
 #' @export
-getParmsLognormForMoments <- function(
-  ### get the mean and variance of a log-normal distribution
-  mean        ##<< expected value at original scale
-  , var       ##<< variance at original scale
-  , sigmaOrig = sqrt(var)  ##<< standard deviation at original scale 
-  ##, can be specified alternatively to the variance
-){
-  ##references<< \code{Limpert E, Stahel W & Abbt M (2001)
-  ## Log-normal Distributions across the Sciences: Keys and Clues.
-  ## Oxford University Press (OUP) 51, 341,
-  ## 10.1641/0006-3568(2001)051[0341:lndats]2.0.co;2}
-  omega = 1 + (sigmaOrig/mean)^2
-  mu = log(mean / sqrt(omega))
-  sigma = sqrt(log(omega))
-  ##value<< numeric matrix with columns
-  cbind(
-    mu = mu         ##<< center parameter
-    ## (mean at log scale, log(median))
-    ,sigma = sigma  ##<< scale parameter
-    ## (standard deviation at log scale)
-  )
-}
-attr(getParmsLognormForMoments,"ex") <- function(){
-  .mean <- 1
-  .var <- c(1.3,2)^2
-  getParmsLognormForMoments(.mean, .var)
+scaleLogToOrig <- function(logmean, sigma){
+  ans <- moments <- getLognormMoments(sigma = sigma, 
+                                      m = exp(logmean))[,1:2, drop = FALSE]
+  colnames(ans) <- c("mean","sd")
+  ans[,"sd"] <- sqrt(moments[,"var"])
+  ans
 }
 
-
+#' @describeIn scaleLogToOrig get mean and sd at original scale
+#' @param mean expected value at original scale
+#' @param sd standard deviation at original scale
 #' @export
-getParmsLognormForExpval <- function(
-  ### get the lognormal parameters by expected value
-  mean        ##<< expected value at original scale
-  , sigmaStar ##<< multiplicative standard deviation
-){
-  sigma = log(sigmaStar)
-  mu = log(mean) - sigma*sigma/2
-  cbind(
-    mu = mu         ##<< center parameter
-    ## (mean at log scale, log(median))
-    ,sigma = sigma  ##<< scale parameter
-    ## (standard deviation at log scale)
-  )
-}
-attr(getParmsLognormForExpval,"ex") <- function(){
-  .mean <- 1
-  .sigmaStar <- c(1.3,2)
-  (parms <- getParmsLognormForExpval(.mean, .sigmaStar))
-  # multiplicative standard deviation must equal the specified value
-  cbind(exp(parms[,"sigma"]), .sigmaStar)
+scaleOrigToLog <- function(mean, sd){
+  ans <- getParmsLognormForMoments(mean = mean, sigmaOrig = sd)
+  colnames(ans) <- c("logmean","sigma")
+  ans[,"logmean"] <- log(mean)
+  ans
 }
 
-#' @export
-estimateParmsLognormFromSample <- function(
-  ### get the lognormal parameters by expected value.
-  x        ##<< numeric vector of sampled values
-  , na.rm = FALSE ##<< a logical value indicating whether 
-  ## NA values should be stripped before the computation proceeds.
-){
-  logx <- log(x)
-  c(
-    mu = mean(logx, na.rm = na.rm)         ##<< center parameter
-    ## (mean at log scale, log(median))
-    ,sigma = sd(logx, na.rm = na.rm)  ##<< scale parameter
-    ## (standard deviation at log scale)
-  )
-}
-attr(estimateParmsLognormFromSample,"ex") <- function(){
-  .mu <- log(1)
-  .sigma <- log(2)
-  x <- exp(rnorm(50, mean = .mu, sd = .sigma))
-  estimateParmsLognormFromSample(x)
-}
+
