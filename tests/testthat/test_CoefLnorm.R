@@ -80,6 +80,7 @@ test_that("estimateStdErrParms",{
   nrep <- 4048*64
   nrep <- 4048
   # bootstrap sample of mean across n lognormal variables
+  set.seed(0815)
   mx_boot = purrr::map_dbl(seq_len(nrep), function(i){
     x <- exp(rnorm(n, mean = pS[1,"mu"], sd = pS[1,"sigma"]))
     #plot(density(x))
@@ -105,7 +106,7 @@ test_that("estimateStdErrParms",{
     # orange slightly better approximation, but here normal approx is sufficient
     # (with n and nrep sufficiently large)
   }
-  expect_equivalent(mean(x), xo[1,"mean"], 0.2/sqrt(n), scale = 1 )
+  expect_equivalent(mean(x), xo[1,"mean"], 0.3/sqrt(n), scale = 1 )
   expect_equivalent(sdm, xo[1,"sd"], 0.5/sqrt(n), scale = 1)
   # 
 })

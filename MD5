@@ -1,4 +1,4 @@
-9cb5b6c3649a76905a65a92eddfbdadd *DESCRIPTION
+50b68761928f8e51bed4694197d73145 *DESCRIPTION
 f14440b776106de058d67bfeb8ad6399 *NAMESPACE
 059d920f32bc883586983c3906745c3d *NEWS.md
 0d192a08133e136396d24a4653137a57 *R/autocorr.R
@@ -9,17 +9,17 @@ c6d067e65fce73d3ea286572b6526bd7 *R/lognorm-package.R
 f1b3da7bf541f8865ea6401036714161 *R/lognormalDiff.R
 a8361a83018349520b02a51c78e99de6 *R/lognormalSum.R
 f1a7b3f1422335aa545123ed95109fd9 *R/zzz.R
-f06c5904f3c2624189a7159949048c75 *build/vignette.rds
+23cca0c98a0c57261007a59299995cf4 *build/vignette.rds
 26e7f6ba8c9cfab240e008c6e3943104 *inst/WORDLIST
 b7c51779c563a67be17ae784c3cf5736 *inst/doc/lognorm.R
 8ab5418eea6e758681564807747faa0d *inst/doc/lognorm.Rmd
-a5acad90a465c2bfb1876431db3e9ef3 *inst/doc/lognorm.html
+00fb923dafb190e6db0c679a8a54b628 *inst/doc/lognorm.html
 53be4a50385355d49f933cf475c591f4 *inst/doc/lognormalDiff.R
 a772b1ff5c8851178b5d2feb88626079 *inst/doc/lognormalDiff.Rmd
-be402ce521a6682a4cfb7f0c5cf02e00 *inst/doc/lognormalDiff.html
+2a22d4bfce0d2b44b4d87b85b2b9b983 *inst/doc/lognormalDiff.html
 e7ad8b9268ce3c87e31602e2d7faf514 *inst/doc/lognormalSum.R
 721e9e4747302335ec4362294547e2d7 *inst/doc/lognormalSum.Rmd
-48727f9df77ff283b5b2e8902301149c *inst/doc/lognormalSum.html
+4fda971fbee3b9811a4d964e1a7010e4 *inst/doc/lognormalSum.html
 2e3f1326d2708a369ecaca04e7a2458b *inst/docu/coefLognorm.Rmd
 e2c520e51185007e20bdd4337915804c *inst/docu/coefLognorm.nb.html
 a65d354ea4630f98cb2c41ed6c97d8b8 *inst/docu/varianceBySigmaAndExpected.Rmd
@@ -39,7 +39,7 @@ a024b8d5bc0bdfea83d5bfc8b24c1ae6 *man/scaleLogToOrig.Rd
 12f85ce3883d512cefa2c1fbc28c1bc4 *man/setMatrixOffDiagonals.Rd
 b323c7a78f48a6f85f43c7063046aaf3 *man/varCor.Rd
 30401e408fa1cdce03ee722cd9df5125 *tests/testthat.R
-3083bfa6cdefef282bb4bba816e51bcd *tests/testthat/test_CoefLnorm.R
+28e49f39954e9fbc327f20ff4899d920 *tests/testthat/test_CoefLnorm.R
 e022b2a8caefbae91635a632ad1359b8 *tests/testthat/test_autoCorr.R
 d71d8960ed793a70dd5d692864d42b01 *tests/testthat/test_diffLognormal.R
 4972636d3516e10a36e780cf4769c893 *tests/testthat/test_lognorm.R
